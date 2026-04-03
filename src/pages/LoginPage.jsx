@@ -138,7 +138,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-slate-400">
-          Google sign-in only works for accounts marked as <strong>Admin</strong> in the database.
+          Google sign-in is available for accounts marked as <strong>Admin</strong>.
         </p>
       </div>
     </div>
