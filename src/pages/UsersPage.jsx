@@ -5,16 +5,18 @@ import { getUsers } from '../api/client'
 import Badge from '../components/Badge'
 import Pagination from '../components/Pagination'
 import Spinner from '../components/Spinner'
+import AddCreditsModal from '../components/AddCreditsModal'
 
 const LIMIT = 25
 
 export default function UsersPage() {
-  const [data, setData]       = useState(null)
-  const [page, setPage]       = useState(1)
-  const [search, setSearch]   = useState('')
-  const [authType, setAuth]   = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState('')
+  const [data, setData]           = useState(null)
+  const [page, setPage]           = useState(1)
+  const [search, setSearch]       = useState('')
+  const [authType, setAuth]       = useState('')
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState('')
+  const [creditsUser, setCreditsUser] = useState(null) // user whose modal is open
 
   useEffect(() => {
     setLoading(true)
@@ -27,6 +29,18 @@ export default function UsersPage() {
   function handleSearch(e) {
     setSearch(e.target.value)
     setPage(1)
+  }
+
+  function handleCreditsClose(updatedCredits) {
+    if (updatedCredits !== undefined && creditsUser) {
+      setData((prev) => ({
+        ...prev,
+        users: prev.users.map((u) =>
+          u.id === creditsUser.id ? { ...u, publishingCredits: updatedCredits } : u
+        ),
+      }))
+    }
+    setCreditsUser(null)
   }
 
   return (
@@ -105,9 +119,18 @@ export default function UsersPage() {
                         <span className="text-slate-400 text-xs ml-1">({u.sites.live} live)</span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`font-semibold ${u.publishingCredits > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                          {u.publishingCredits}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-semibold ${u.publishingCredits > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {u.publishingCredits}
+                          </span>
+                          <button
+                            onClick={() => setCreditsUser(u)}
+                            title="Manage credits"
+                            className="rounded-lg px-2 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 transition"
+                          >
+                            + Credits
+                          </button>
+                        </div>
                       </td>
                       <td className="px-5 py-4 text-slate-500 text-xs">
                         {format(new Date(u.createdAt), 'd MMM yyyy')}
@@ -132,6 +155,11 @@ export default function UsersPage() {
           </>
         )}
       </div>
+
+      {/* Credits modal */}
+      {creditsUser && (
+        <AddCreditsModal user={creditsUser} onClose={handleCreditsClose} />
+      )}
     </div>
   )
 }

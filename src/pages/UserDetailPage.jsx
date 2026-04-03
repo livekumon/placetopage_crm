@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { getUserDetail } from '../api/client'
 import Badge from '../components/Badge'
 import Spinner from '../components/Spinner'
+import AddCreditsModal from '../components/AddCreditsModal'
 
 function Section({ title, children }) {
   return (
@@ -18,9 +19,10 @@ function Section({ title, children }) {
 
 export default function UserDetailPage() {
   const { id } = useParams()
-  const [data, setData]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState('')
+  const [data, setData]             = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState('')
+  const [showCredits, setShowCredits] = useState(false)
 
   useEffect(() => {
     getUserDetail(id)
@@ -28,6 +30,16 @@ export default function UserDetailPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
+
+  function handleCreditsClose(updatedCredits) {
+    if (updatedCredits !== undefined) {
+      setData((prev) => ({
+        ...prev,
+        user: { ...prev.user, publishingCredits: updatedCredits },
+      }))
+    }
+    setShowCredits(false)
+  }
 
   if (loading) return <div className="flex h-full items-center justify-center"><Spinner className="h-10 w-10" /></div>
   if (error)   return <p className="p-8 text-red-600">{error}</p>
@@ -64,18 +76,30 @@ export default function UserDetailPage() {
             </p>
           </div>
           {/* Quick stats */}
-          <div className="flex gap-6 text-center">
+          <div className="flex flex-wrap items-start gap-6 text-center">
             {[
-              { label: 'Sites',    value: sites.length },
-              { label: 'Live',     value: sites.filter((s) => s.status === 'live').length },
-              { label: 'Credits',  value: user.publishingCredits },
-              { label: 'Revenue',  value: `$${totalRevenue.toFixed(2)}` },
+              { label: 'Sites',   value: sites.length },
+              { label: 'Live',    value: sites.filter((s) => s.status === 'live').length },
+              { label: 'Revenue', value: `$${totalRevenue.toFixed(2)}` },
             ].map(({ label, value }) => (
               <div key={label}>
                 <p className="text-2xl font-bold text-slate-900">{value}</p>
                 <p className="text-xs text-slate-400 font-medium mt-0.5">{label}</p>
               </div>
             ))}
+            {/* Credits with manage button */}
+            <div className="flex flex-col items-center gap-1.5">
+              <p className={`text-2xl font-bold ${user.publishingCredits > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                {user.publishingCredits ?? 0}
+              </p>
+              <p className="text-xs text-slate-400 font-medium">Credits</p>
+              <button
+                onClick={() => setShowCredits(true)}
+                className="rounded-lg px-2.5 py-1 text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 transition whitespace-nowrap"
+              >
+                Manage
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -104,6 +128,10 @@ export default function UserDetailPage() {
           </div>
         )}
       </Section>
+
+      {showCredits && (
+        <AddCreditsModal user={user} onClose={handleCreditsClose} />
+      )}
 
       {/* Payments */}
       <Section title={`Payments (${payments.length})`}>

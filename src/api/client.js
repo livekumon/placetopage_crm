@@ -26,6 +26,16 @@ export const adminLogin = (email, password) =>
 export const googleLogin = (credential) =>
   request('/auth/google/login', { method: 'POST', body: JSON.stringify({ credential }) })
 
+/**
+ * Add or set publishing credits for a user.
+ * Pass { add: n } to add/subtract, or { set: n } for an absolute value.
+ */
+export const updateUserCredits = (userId, payload) =>
+  request(`/admin/users/${userId}/credits`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+
 export const getMetrics = () => request('/admin/metrics')
 
 export const getGrowthChart = (days = 30) => request(`/admin/charts/growth?days=${days}`)
