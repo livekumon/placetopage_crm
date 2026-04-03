@@ -1,15 +1,56 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function LoginPage() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
+export default function LoginPage() {
+  const { login, googleLogin } = useAuth()
+  const navigate = useNavigate()
+
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [busy, setBusy]         = useState(false)
+  const googleBtnRef            = useRef(null)
+
+  // ── Google SSO initialisation ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !window.google?.accounts?.id) return
+
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCallback,
+      use_fedcm_for_prompt: true,
+    })
+
+    if (googleBtnRef.current) {
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: googleBtnRef.current.offsetWidth || 340,
+        text: 'signin_with',
+        shape: 'rectangular',
+        logo_alignment: 'center',
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handleGoogleCallback(response) {
+    setError('')
+    setBusy(true)
+    try {
+      await googleLogin(response.credential)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // ── Email / password submit ─────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
@@ -18,7 +59,7 @@ export default function LoginPage() {
       await login(email, password)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(err.message || 'Login failed')
+      setError(err.message || 'Login failed.')
     } finally {
       setBusy(false)
     }
@@ -38,47 +79,67 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-slate-500">Admin access only</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-5">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-5">
           {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-              placeholder="admin@example.com"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-              placeholder="••••••••"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
-          >
-            {busy ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+
+          {/* Google SSO button */}
+          {GOOGLE_CLIENT_ID && (
+            <>
+              <div ref={googleBtnRef} className="w-full overflow-hidden rounded-xl" />
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-xs font-medium text-slate-400">or sign in with password</span>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+            </>
+          )}
+
+          {/* Email / password form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                autoFocus={!GOOGLE_CLIENT_ID}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                placeholder="admin@example.com"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {busy ? 'Signing in…' : 'Sign in with password'}
+            </button>
+          </form>
+        </div>
+
+        <p className="mt-5 text-center text-xs text-slate-400">
+          Google sign-in only works for accounts marked as <strong>Admin</strong> in the database.
+        </p>
       </div>
     </div>
   )

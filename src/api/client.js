@@ -22,6 +22,10 @@ async function request(path, options = {}) {
 export const adminLogin = (email, password) =>
   request('/admin/login', { method: 'POST', body: JSON.stringify({ email, password }) })
 
+/** Google SSO login — returns { token, user } where user.isAdmin must be true */
+export const googleLogin = (credential) =>
+  request('/auth/google/login', { method: 'POST', body: JSON.stringify({ credential }) })
+
 export const getMetrics = () => request('/admin/metrics')
 
 export const getGrowthChart = (days = 30) => request(`/admin/charts/growth?days=${days}`)
