@@ -54,7 +54,7 @@ export default function Layout() {
         <div className="flex h-16 items-center gap-2.5 border-b border-slate-100 px-5">
           {brandMark}
           <div>
-            <p className="text-sm font-bold text-slate-900 leading-none">Place to Page</p>
+            <p className="text-sm font-bold text-slate-900 leading-none">placetopage.com</p>
             <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">CRM</p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function Layout() {
               <div className="flex items-center gap-2.5">
                 {brandMark}
                 <div>
-                  <p className="text-sm font-bold text-slate-900 leading-none">Place to Page</p>
+                  <p className="text-sm font-bold text-slate-900 leading-none">placetopage.com</p>
                   <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">CRM</p>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function Layout() {
           <div className="flex items-center gap-2.5">
             {brandMark}
             <div>
-              <p className="text-sm font-bold text-slate-900 leading-none">Place to Page</p>
+              <p className="text-sm font-bold text-slate-900 leading-none">placetopage.com</p>
               <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">CRM</p>
             </div>
           </div>
